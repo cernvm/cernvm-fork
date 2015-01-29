@@ -35,7 +35,7 @@ function usage {
 	echo "                    [-r|--run=<script>] [-t|--tty=<number>]"
 	echo "                    [-a|--admin=<username>[:<password>]]"
 	echo "                    [--init=<script>] [--cvmfs=<repos>]"
-	echo "                    [--log=<file>] [--ip=<address>]"
+	echo "                    [--log=<file>] [--ip=<address>] [-o <lxc-option>]"
 	echo " cernfm-fork <name> -C [-t|--tty=<number>]"
 	echo " cernfm-fork <name> -D"
 	echo ""
@@ -48,6 +48,7 @@ function usage {
 	echo "  -r|--run=<script> Run the given script upon boot"
 	echo "  -a|--admin=<user> Create a user with sudo privileges"
 	echo "  -t|--tty=<number> The TTY to connect the console to"
+	echo "  -o <lxc-config>   Additional LXC lines in the configuration script"
 	echo "  --init=<script>   Custom init script to use for booting"
 	echo "  --ip=<address>    The IP address of the new container"
 	echo "  --log=<file>      Where to log debug information"
@@ -70,7 +71,7 @@ NAME=$1
 [ "${NAME:0:1}" == "-" ] && echo "ERROR: Expecting fork name as first parameter! (Use --help for more info)" && exit 1
 
 # Get options from command-line
-options=$(getopt -o hDCt:nfcdra: -l help,destroy,console,tty:,new,nonic,fast,daemon,admin:,cvmfs:,run:,init:,ip:,log: -- "$@")
+options=$(getopt -o hDCt:nfcdra:o: -l help,destroy,console,tty:,new,nonic,fast,daemon,admin:,cvmfs:,run:,init:,ip:,log: -- "$@")
 if [ $? -ne 0 ]; then
 	usage
 	exit 1
@@ -99,6 +100,7 @@ ADMIN_USER=""
 ADMIN_PWD=""
 COMMAND="create"
 CONSOLE_TTY="1"
+RAW_CONFIG=""
 
 # Process options
 while true
@@ -123,6 +125,7 @@ do
 			shift 2;;
 		-D|--destroy)		COMMAND="destroy"; shift 1;;
 		-C|--console)		COMMAND="console"; shift 1;;
+		-o)					RAW_CONFIG="${RAW_CONFIG}|$2"; shift 2;;
 		--cvmfs)            CVMFS_REPOS="${CVMFS_REPOS} $2"; shift 2;;
 		--init)             INIT_SCRIPT=$2; shift 2;;
 		--ip)               IP_ADDR=$2; shift 2;;
@@ -318,7 +321,7 @@ EOF
 # Check if we should not add network
 if [ $F_NONIC -eq 1 ]; then
 	cat <<EOF >> $LXC_CONFIG
-lxc.network.type=empty
+lxc.network.type = empty
 EOF
 else
 
@@ -379,6 +382,14 @@ if [ ! -z "$CVMFS_REPOS" ]; then
 	   echo "lxc.mount.entry = /cvmfs/${REPOS} cvmfs/${REPOS} none ro,bind,optional 0 0" >> $LXC_CONFIG
 	done
 	echo "ok"
+
+fi
+
+# Append additional config
+if [ ! -z "$RAW_CONFIG" ]; then
+
+	# Convert '|' to '\n'
+	echo "$RAW_CONFIG" | tr '|' '\n' >> $LXC_CONFIG
 
 fi
 

@@ -16,7 +16,7 @@ The `cernvm-fork ` utility accepts the following command-line parameters:
                         [-r|--run=<script>] [-t|--tty=<number>]
                         [-a|--admin=<username>[:<password>]]
                         [--init=<script>] [--cvmfs=<repos>]
-                        [--log=<file>] [--ip=<address>]
+                        [--log=<file>] [--ip=<address>] [-o <lxc-option>]
      cernvm-fork <name> -C [-t|--tty=<number>]
      cernvm-fork <name> -D
 
@@ -33,6 +33,7 @@ When creating a new CernVM fork, the following parameters are accepted:
  * `--ip=<address>` : The IP address to assign to the container. If this flag is not specified, a random new IP will be assigned.
  * `--log=<file>` : The file where to write the debug log messages.
  * `--cvmfs=<repository>[,<repository>...]` : The names of the CVMFS repositories to bind-mount from the host OS to the guest OS before booting.
+ * `-o <config>` defines additional arbitrary lxc-container configuration parameters to append in the config file.
 
 The `cernvm-fork` utility also accepts the following commands:
 
@@ -158,7 +159,8 @@ When instructed to perform a *Clean boot*, the utility will follow the same proc
 
 # License
 
-CernVM Environment Fork Utility 
+CernVM Environment Fork Utility
+
 Copyright (C) 2014-2015  Ioannis Charalampidis, PH-SFT, CERN
 
 This program is free software; you can redistribute it and/or
