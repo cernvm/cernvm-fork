@@ -187,6 +187,13 @@ function cleanup {
 
 }
 
+# Die after error function (includes cleanup)
+function die {
+	echo "ERROR: $1"
+	cleanup
+	exit 2
+}
+
 ########################
 ### COMMAND HANDLING ###
 ########################
@@ -330,7 +337,24 @@ else
 
 	# Calculate a random IP Address
 	if [ -z "${IP_ADDR}" ]; then
-	   IP_ADDR=${CONFIG_IP_SUFFIX}.$(shuf -i 2-254 -n 1)
+
+		# Try 253 times for a unique IP
+		for tries in {1..253}; done
+
+			# Calculate new IP
+			IP_ADDR=${CONFIG_IP_SUFFIX}.$(shuf -i 2-254 -n 1)
+
+			# Check if this is in use
+			[ $(cat /var/lib/lxc/*/config 2>/dev/null | grep -c ${IP_ADDR}) -eq 0 ] && break
+			IP_ADDR=""
+
+		done
+
+		# Check for errors
+		if [ -z "${IP_ADDR}" ]; then
+			die "ERROR: Could not find a free IP address!"
+		fi
+
 	fi
 	echo "The container will have IP ${IP_ADDR}"
 
@@ -395,13 +419,6 @@ if [ ! -z "$RAW_CONFIG" ]; then
 	echo "$RAW_CONFIG" | tr '|' '\n' >> $LXC_CONFIG
 
 fi
-
-# Die after error function (includes cleanup)
-function die {
-	echo "ERROR: $1"
-	cleanup
-	exit 2
-}
 
 # Create fast-init script if asked to
 if [ $F_FAST -eq 1 ]; then
