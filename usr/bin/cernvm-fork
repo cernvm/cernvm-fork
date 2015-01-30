@@ -70,6 +70,9 @@ NAME=$1
 [ -z "$NAME" ] && echo "ERROR: Please specify an environment name! (Use --help for more info)" && exit 1
 [ "${NAME:0:1}" == "-" ] && echo "ERROR: Expecting fork name as first parameter! (Use --help for more info)" && exit 1
 
+# Require root
+[ $(id -u) -ne 0 ] && echo "ERROR: Only root can use this utility!" && exit 2
+
 # Get options from command-line
 options=$(getopt -o hDCt:nfcdra:o: -l help,destroy,console,tty:,new,nonic,fast,daemon,admin:,cvmfs:,run:,init:,ip:,log: -- "$@")
 if [ $? -ne 0 ]; then
@@ -80,7 +83,7 @@ eval set -- "$options"
 
 # Detect the first bridge availble
 SYS_BRIDGE_IP=""
-SYS_BRIDGE=$(brctl show | tail -n -1 | head -n 1 | awk '{print $1}')
+SYS_BRIDGE=$(brctl show | tail -n +2 | head -n 1 | awk '{print $1}')
 if [ ! -z "$SYS_BRIDGE" ]; then
 	# Detect the IP address of the bridge
 	SYS_BRIDGE_IP=$(ifconfig ${SYS_BRIDGE} | grep 'inet addr' | sed -r 's/.*?addr:([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/\1/')
