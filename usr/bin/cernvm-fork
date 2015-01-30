@@ -339,7 +339,7 @@ else
 	if [ -z "${IP_ADDR}" ]; then
 
 		# Try 253 times for a unique IP
-		for tries in {1..253}; done
+		for tries in `seq 1 253`; do
 
 			# Calculate new IP
 			IP_ADDR=${CONFIG_IP_SUFFIX}.$(shuf -i 2-254 -n 1)
