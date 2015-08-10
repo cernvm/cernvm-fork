@@ -152,7 +152,7 @@ fi
 function cleanup {
 
 	# Stop container
-	if [ $(lxc-ls | grep -c -r "^${NAME}$") -ne 0 ]; then
+	if [ $(lxc-ls | grep -c "^${NAME}$") -ne 0 ]; then
 		echo "Stopping container..."
 		lxc-stop --name=${NAME} ${LOG_CMDLINE} -k 2>/dev/null
 	fi
@@ -165,7 +165,7 @@ function cleanup {
 	fi
 
 	# Destroy container if exists
-	if [ $(lxc-ls | grep -c -r "^${NAME}$") -ne 0 ]; then
+	if [ $(lxc-ls | grep -c "^${NAME}$") -ne 0 ]; then
 		echo "Destroying container..."
 		lxc-destroy --name=${NAME} ${LOG_CMDLINE} >/dev/null
 		echo "Cleaning-up config files..."
@@ -197,7 +197,7 @@ if [ "${COMMAND}" == "destroy" ]; then
 	cleanup
 	exit 0
 elif [ "${COMMAND}" == "console" ]; then
-	if [ $(lxc-ls | grep -c -r "^${NAME}$") -ne 0 ]; then
+	if [ $(lxc-ls | grep -c "^${NAME}$") -ne 0 ]; then
 		echo "Connecting to container..."
 		lxc-console --name=${NAME} ${LOG_CMDLINE} -t ${CONSOLE_TTY} || die "Unable to connect to the console"
 	fi
