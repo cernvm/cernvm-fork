@@ -1,0 +1,92 @@
+#!/bin/bash
+#
+# cernvm-fork - Shutdown scripts for cernvm-fork
+#
+# chkconfig: 12345 99 15
+# description: Stops all cernvm-forks at shutdown
+# author: Ioannis Charalampidis <ioannis.charalampidis@cern.ch>, PH/SFT
+#
+### BEGIN INIT INFO
+# Provides: cernvm-fork
+# Defalt-Start: 1 2 3 4 5
+# Default-Stop: 0 6
+# Description: Stops all cernvm-forks at shutdown
+### END INIT INFO
+
+# Setup environment
+source /etc/init.d/functions
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+export LANG=C
+
+# Containers directory
+CONTAINERS_DIR="/mnt/.rw/containers"
+
+# Where CernVM fork is located
+CERNVM_FORK_BIN="/usr/bin/cernvm-fork"
+
+#
+# Stop all runnnig containers
+#
+stop_containers () {
+
+    # Remove mark
+    rm -f /var/lock/subsys/cernvm-fork
+
+    # Enumerate containers
+    CONTAINERS=$(ls ${CONTAINERS_DIR})
+
+    # If we have nothing, return
+    if [ -z "$CONTAINERS" ]; then
+        return 0
+    fi
+
+    # Destroy all containers
+    echo "Stopping all CernVM forks:"
+    for CONTAINER in $CONTAINERS; do
+        # Destroy container
+        echo -n " * $CONTAINER "
+        ${CERNVM_FORK_BIN} ${CONTAINER} -D >/dev/null 2>/dev/null
+
+        # Display message
+        if [ $? -eq 0 ]; then
+            echo_success
+        else
+            echo_failure
+        fi
+        echo ""
+
+    done
+
+    # We are good
+    return 0
+
+}
+
+#
+# Mark the script as started
+#
+mark_start() {
+    touch /var/lock/subsys/cernvm-fork
+    return 0
+}
+
+#
+# Handle Cases
+#
+case "$1" in
+    start)
+        mark_start
+        ;;
+    stop)
+        stop_containers
+        ;;
+    restart)
+        true
+        ;;
+    condrestart)
+        true
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+        ;;
+esac
